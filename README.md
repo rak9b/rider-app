@@ -349,16 +349,16 @@ Use these pre-configured accounts to test the application:
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        Browser[🌐 Web Browser]
-        Mobile[📱 Mobile Browser]
+        Browser["🌐 Web Browser"]
+        Mobile["📱 Mobile Browser"]
     end
 
     subgraph "Frontend - React + Vite"
-        ReactApp[⚛️ React Application]
-        Redux[🔄 Redux Store]
-        RTK[🌐 RTK Query]
-        Router[🛣️ React Router]
-        UI[🎨 UI Components]
+        ReactApp["⚛️ React Application"]
+        Redux["🔄 Redux Store"]
+        RTK["🌐 RTK Query"]
+        Router["🛣️ React Router"]
+        UI["🎨 UI Components"]
         
         ReactApp --> Redux
         ReactApp --> Router
@@ -367,10 +367,10 @@ graph TB
     end
 
     subgraph "Backend - Node.js + Express"
-        API[🚂 Express Server]
-        Auth[🔐 JWT Middleware]
-        Controllers[📋 Controllers]
-        Routes[🛣️ API Routes]
+        API["🚂 Express Server"]
+        Auth["🔐 JWT Middleware"]
+        Controllers["📋 Controllers"]
+        Routes["🛣️ API Routes"]
         
         API --> Routes
         Routes --> Auth
@@ -378,8 +378,8 @@ graph TB
     end
 
     subgraph "Data Layer"
-        MockDB[(💾 Mock User Store)]
-        MongoDB[(🍃 MongoDB)]
+        MockDB[("💾 Mock User Store")]
+        MongoDB[("🍃 MongoDB")]
         
         Controllers -.-> MockDB
         Controllers -.-> MongoDB
@@ -450,9 +450,9 @@ graph TB
         Entry[index.ts]
         
         subgraph "Routes Layer"
-            AuthRoutes[/api/auth]
-            RideRoutes[/api/rides]
-            UserRoutes[/api/users]
+            AuthRoutes["/api/auth"]
+            RideRoutes["/api/rides"]
+            UserRoutes["/api/users"]
         end
         
         subgraph "Middleware"
@@ -599,13 +599,13 @@ Neutral:   #64748b (Slate)
 
 ```mermaid
 graph TB
-    User[👤 User] --> Frontend[⚛️ React Frontend]
-    Frontend --> API[🔌 Express API]
-    API --> Auth{🔐 JWT Auth}
-    Auth -->|Valid| Controllers[📋 Controllers]
-    Auth -->|Invalid| Error[❌ 401 Error]
-    Controllers --> DB[(🍃 MongoDB)]
-    Controllers --> Response[📤 JSON Response]
+    User["👤 User"] --> Frontend["⚛️ React Frontend"]
+    Frontend --> API["🔌 Express API"]
+    API --> Auth{"🔐 JWT Auth"}
+    Auth -->|Valid| Controllers["📋 Controllers"]
+    Auth -->|Invalid| Error["❌ 401 Error"]
+    Controllers --> DB[("🍃 MongoDB")]
+    Controllers --> Response["📤 JSON Response"]
     Response --> Frontend
 ```
 
@@ -641,7 +641,7 @@ npm run lint     # Run ESLint
 
 ---
 
-## � **URL Reference**
+## 🔗 **URL Reference**
 
 ### 📋 **Frontend URLs** (http://localhost:5173)
 
@@ -723,7 +723,7 @@ PUT  http://localhost:5000/api/users/:id/status       # Update user status (admi
 
 ---
 
-## �📚 **Documentation**
+## 📚 **Documentation**
 
 - [**Authentication Guide**](./AUTH_CREDENTIALS.md) - Complete auth system documentation
 - [**API Reference**](./URL_GUIDE.md) - All backend endpoints
