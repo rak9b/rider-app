@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import User from '../models/User.js';
+import { mockUserStore } from '../utils/mockUserStore.js';
 
 interface DecodedToken {
     id: string;
@@ -21,12 +21,17 @@ export const protect = async (req: any, res: Response, next: NextFunction) => {
                 process.env.JWT_SECRET || 'secret'
             ) as DecodedToken;
 
-            req.user = await User.findById(decoded.id).select('-password');
+            // Use mock user store instead of MongoDB
+            const user = await mockUserStore.findById(decoded.id);
 
-            if (!req.user) {
+            if (!user) {
                 res.status(401);
                 throw new Error('Not authorized, user not found');
             }
+
+            // Remove password from user object
+            const { password, ...userWithoutPassword } = user;
+            req.user = userWithoutPassword;
 
             next();
         } catch (error) {

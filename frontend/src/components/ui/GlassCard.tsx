@@ -6,15 +6,17 @@ interface GlassCardProps {
     children: React.ReactNode;
     className?: string;
     animate?: boolean;
+    onClick?: () => void;
 }
 
-const GlassCard = ({ children, className, animate = true }: GlassCardProps) => {
+const GlassCard = ({ children, className, animate = true, onClick }: GlassCardProps) => {
     const content = (
         <div
             className={cn(
                 'bg-white/10 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl shadow-xl overflow-hidden',
                 className
             )}
+            onClick={onClick}
         >
             {children}
         </div>

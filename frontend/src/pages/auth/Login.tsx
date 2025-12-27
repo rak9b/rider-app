@@ -31,11 +31,43 @@ export const Login = () => {
   const onSubmit = async (data: LoginFormInputs) => {
     try {
       const result = await login(data).unwrap();
-      dispatch(setCredentials(result));
-      toast.success(`Welcome back, ${result.user.name}!`);
-      navigate(`/dashboard/${result.user.role}`);
+
+      // Backend returns: { _id, name, email, role, status, phone, rating, isOnline, vehicleDetails, token }
+      // Frontend expects: { user: {...}, token: string }
+      const mappedResult = {
+        user: {
+          id: result._id,
+          name: result.name,
+          email: result.email,
+          role: result.role,
+          status: result.status,
+          phone: result.phone,
+          avatar: result.avatar,
+          isOnline: result.isOnline,
+        },
+        token: result.token
+      };
+
+      dispatch(setCredentials(mappedResult));
+
+      // Save to localStorage for persistence
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(mappedResult.user));
+
+      toast.success(`Welcome back, ${result.name}!`, {
+        icon: '👋',
+        duration: 3000,
+      });
+
+      // Navigate to role-specific dashboard
+      navigate(`/dashboard/${result.role}`);
     } catch (err: any) {
-      toast.error(err.data?.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', err);
+      const errorMessage = err?.data?.message || err?.message || 'Login failed. Please check your credentials.';
+      toast.error(errorMessage, {
+        icon: '❌',
+        duration: 4000,
+      });
     }
   };
 

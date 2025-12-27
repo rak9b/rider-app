@@ -20,11 +20,30 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
+// Load from localStorage if available
+const loadFromStorage = () => {
+  try {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (token && userStr) {
+      const user = JSON.parse(userStr);
+      return {
+        user,
+        token,
+        isAuthenticated: true,
+      };
+    }
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+  }
+  return {
+    user: null,
+    token: null,
+    isAuthenticated: false,
+  };
 };
+
+const initialState: AuthState = loadFromStorage();
 
 const authSlice = createSlice({
   name: 'auth',
@@ -52,6 +71,9 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      // Clear localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
   },
 });

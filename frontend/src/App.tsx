@@ -9,6 +9,7 @@ import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
 // Layouts
 import { Navbar } from './components/layout/Navbar';
+import { AIChatbot } from './components/ui/AIChatbot';
 import { Footer } from './components/layout/Footer';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DynamicBackground } from './components/layout/DynamicBackground';
@@ -43,6 +44,7 @@ const PublicLayout = () => (
     <DynamicBackground />
     <Navbar />
     <main className="flex-grow">
+      <AIChatbot />
       <Outlet />
     </main>
     <Footer />

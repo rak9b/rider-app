@@ -1,25 +1,23 @@
 import { Request, Response } from 'express';
-import User from '../models/User.js';
-import Ride from '../models/Ride.js';
+import { mockUserStore } from '../utils/mockUserStore.js';
+
+// Mock ride data for statistics
+const mockRides = [
+    { _id: '1', driver: '507f1f77bcf86cd799439012', status: 'COMPLETED', fare: 25.50 },
+    { _id: '2', driver: '507f1f77bcf86cd799439012', status: 'COMPLETED', fare: 32.00 },
+    { _id: '3', driver: '507f1f77bcf86cd799439015', status: 'COMPLETED', fare: 18.75 },
+];
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
 export const getUserProfile = async (req: any, res: Response) => {
-    const user = await User.findById(req.user._id);
+    const user = await mockUserStore.findById(req.user._id);
 
     if (user) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            status: user.status,
-            phone: user.phone,
-            isOnline: user.isOnline,
-            vehicleDetails: user.vehicleDetails,
-            emergencyContacts: user.emergencyContacts,
-        });
+        // Remove password from response
+        const { password, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
     } else {
         res.status(404);
         throw new Error('User not found');
@@ -30,32 +28,35 @@ export const getUserProfile = async (req: any, res: Response) => {
 // @route   PUT /api/users/profile
 // @access  Private
 export const updateUserProfile = async (req: any, res: Response) => {
-    const user = await User.findById(req.user._id);
+    const user = await mockUserStore.findById(req.user._id);
 
     if (user) {
-        user.name = req.body.name || user.name;
-        user.email = req.body.email || user.email;
-        user.phone = req.body.phone || user.phone;
+        const updateData: any = {};
+
+        if (req.body.name) updateData.name = req.body.name;
+        if (req.body.email) updateData.email = req.body.email;
+        if (req.body.phone) updateData.phone = req.body.phone;
 
         if (user.role === 'driver') {
-            user.isOnline = req.body.isOnline !== undefined ? req.body.isOnline : user.isOnline;
-            user.vehicleDetails = req.body.vehicleDetails || user.vehicleDetails;
+            if (req.body.isOnline !== undefined) updateData.isOnline = req.body.isOnline;
+            if (req.body.vehicleDetails) updateData.vehicleDetails = req.body.vehicleDetails;
         }
 
-        if (req.body.password) {
-            user.password = req.body.password;
+        const updatedUser = await mockUserStore.updateOne(
+            { _id: req.user._id },
+            updateData
+        );
+
+        if (updatedUser) {
+            const { password, ...userWithoutPassword } = updatedUser;
+            res.json({
+                ...userWithoutPassword,
+                token: req.headers.authorization?.split(' ')[1] // return existing token
+            });
+        } else {
+            res.status(400);
+            throw new Error('Failed to update user');
         }
-
-        const updatedUser = await user.save();
-
-        res.json({
-            _id: updatedUser._id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            role: updatedUser.role,
-            status: updatedUser.status,
-            token: req.headers.authorization?.split(' ')[1] // return existing token
-        });
     } else {
         res.status(404);
         throw new Error('User not found');
@@ -66,25 +67,27 @@ export const updateUserProfile = async (req: any, res: Response) => {
 // @route   GET /api/users/driver/stats
 // @access  Private (Driver)
 export const getDriverStats = async (req: any, res: Response) => {
-    const rides = await Ride.find({ driver: req.user._id, status: 'COMPLETED' });
+    // Filter rides for current driver
+    const rides = mockRides.filter(ride => ride.driver === req.user._id && ride.status === 'COMPLETED');
 
     const totalEarnings = rides.reduce((acc, ride) => acc + (ride.fare || 0), 0);
     const totalRides = rides.length;
 
     // Mock weekly breakdown
     const weeklyStats = [
-        { name: 'Mon', value: Math.floor(Math.random() * 100) },
-        { name: 'Tue', value: Math.floor(Math.random() * 100) },
-        { name: 'Wed', value: Math.floor(Math.random() * 100) },
-        { name: 'Thu', value: Math.floor(Math.random() * 100) },
-        { name: 'Fri', value: Math.floor(Math.random() * 100) },
-        { name: 'Sat', value: Math.floor(Math.random() * 100) },
-        { name: 'Sun', value: Math.floor(Math.random() * 100) },
+        { name: 'Mon', value: 45 },
+        { name: 'Tue', value: 62 },
+        { name: 'Wed', value: 78 },
+        { name: 'Thu', value: 55 },
+        { name: 'Fri', value: 92 },
+        { name: 'Sat', value: 105 },
+        { name: 'Sun', value: 88 },
     ];
 
     res.json({
         totalEarnings,
         totalRides,
+        avgRating: req.user.rating || 4.9,
         weeklyStats
     });
 };
@@ -93,14 +96,14 @@ export const getDriverStats = async (req: any, res: Response) => {
 // @route   GET /api/users/admin/analytics
 // @access  Private (Admin)
 export const getAdminAnalytics = async (req: Request, res: Response) => {
-    const totalUsers = await User.countDocuments();
-    const totalDrivers = await User.countDocuments({ role: 'driver' });
-    const totalRiders = await User.countDocuments({ role: 'rider' });
-    const totalRides = await Ride.countDocuments();
-    const completedRides = await Ride.countDocuments({ status: 'COMPLETED' });
+    const allUsers = await mockUserStore.find();
 
-    const rides = await Ride.find({ status: 'COMPLETED' });
-    const totalRevenue = rides.reduce((acc, ride) => acc + (ride.fare || 0), 0);
+    const totalUsers = allUsers.length;
+    const totalDrivers = allUsers.filter(u => u.role === 'driver').length;
+    const totalRiders = allUsers.filter(u => u.role === 'rider').length;
+    const totalRides = mockRides.length;
+    const completedRides = mockRides.filter(r => r.status === 'COMPLETED').length;
+    const totalRevenue = mockRides.reduce((acc, ride) => acc + (ride.fare || 0), 0);
 
     res.json({
         stats: {
@@ -117,6 +120,13 @@ export const getAdminAnalytics = async (req: Request, res: Response) => {
             { name: 'Week 2', value: totalRevenue * 0.3 },
             { name: 'Week 3', value: totalRevenue * 0.25 },
             { name: 'Week 4', value: totalRevenue * 0.25 },
+        ],
+        userGrowth: [
+            { name: 'Jan', riders: 120, drivers: 45 },
+            { name: 'Feb', riders: 180, drivers: 62 },
+            { name: 'Mar', riders: 245, drivers: 78 },
+            { name: 'Apr', riders: 320, drivers: 95 },
+            { name: 'May', riders: totalRiders, drivers: totalDrivers },
         ]
     });
 };
@@ -126,15 +136,23 @@ export const getAdminAnalytics = async (req: Request, res: Response) => {
 // @access  Private (Admin)
 export const manageUserStatus = async (req: Request, res: Response) => {
     const { status } = req.body;
-    const user = await User.findById(req.params.id);
+
+    const user = await mockUserStore.findById(req.params.id);
 
     if (!user) {
         res.status(404);
         throw new Error('User not found');
     }
 
-    user.status = status;
-    await user.save();
+    const updated = await mockUserStore.updateOne(
+        { _id: req.params.id },
+        { status }
+    );
 
-    res.json({ message: `User status updated to ${status}` });
+    if (updated) {
+        res.json({ message: `User status updated to ${status}`, user: updated });
+    } else {
+        res.status(400);
+        throw new Error('Failed to update user status');
+    }
 };

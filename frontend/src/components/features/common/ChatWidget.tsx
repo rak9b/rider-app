@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Paperclip, Smile, Check, CheckCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { faker } from '@faker-js/faker';
 import { cn } from '../../../lib/utils';
 
 interface Message {
@@ -16,9 +15,18 @@ export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Hello! I am your driver. I will be there in 5 mins.', sender: 'other', time: '10:00', read: true },
+    { id: '1', text: 'Hello! I am your Velox AI Assistant. How can I help you today?', sender: 'other', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), read: true },
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const roadmapResponses: Record<string, string> = {
+    upcoming: "Our upcoming roadmap includes a Mobile App (iOS/Android), Crypto Payments, and Multi-city expansion!",
+    future: "In the future, we plan to implement AI-based dynamic pricing and self-driving fleet integration.",
+    mobile: "The mobile app is currently in development and is expected to launch in Q2 2026.",
+    payment: "We currently support Credit Cards. Digital wallets and Crypto payments are coming soon!",
+    safety: "Your safety is our priority. We are adding 'Voice-activated SOS' and 'Real-time Video Monitoring' next month.",
+    help: "I can tell you about our roadmap, upcoming features, or help you with your account settings!"
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,6 +40,7 @@ export const ChatWidget = () => {
     e?.preventDefault();
     if (!message.trim()) return;
 
+    const userText = message.toLowerCase();
     const newMessage: Message = {
       id: Date.now().toString(),
       text: message,
@@ -40,29 +49,31 @@ export const ChatWidget = () => {
       read: false
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setMessage('');
 
-    // Simulate reply and read receipt
+    // Simulate AI Processing
     setTimeout(() => {
       setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...m, read: true } : m));
-    }, 1000);
 
-    setTimeout(() => {
+      let replyText = "I'm not sure about that, but I've noted it for our developers! Try asking about 'upcoming features' or 'mobile app'.";
+
+      for (const [key, value] of Object.entries(roadmapResponses)) {
+        if (userText.includes(key)) {
+          replyText = value;
+          break;
+        }
+      }
+
       const reply: Message = {
         id: (Date.now() + 1).toString(),
-        text: faker.helpers.arrayElement([
-          "Okay, got it!",
-          "I'm stuck in traffic, sorry.",
-          "See you soon!",
-          "Please wait at the pickup point."
-        ]),
+        text: replyText,
         sender: 'other',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         read: true
       };
       setMessages(prev => [...prev, reply]);
-    }, 2500);
+    }, 1000);
   };
 
   return (
@@ -78,12 +89,12 @@ export const ChatWidget = () => {
             {/* Telegram Header */}
             <div className="bg-white dark:bg-slate-900 p-3 flex items-center justify-between border-b border-gray-100 dark:border-black/20 z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
               <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                  JD
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                  AI
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">John Driver</h3>
-                  <p className="text-xs text-primary-500 font-medium">online</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Velox Support</h3>
+                  <p className="text-xs text-primary-500 font-medium">Assistant</p>
                 </div>
               </div>
               <button
@@ -171,7 +182,7 @@ export const ChatWidget = () => {
             ? "bg-gray-200 text-gray-600 dark:bg-slate-900 dark:text-white"
             : "bg-primary-500 text-white hover:bg-primary-600"
         )}
-        aria-label="Chat with Driver"
+        aria-label="Chat with Support"
       >
         <MessageCircle size={28} className={isOpen ? "fill-current" : ""} />
       </button>
