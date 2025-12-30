@@ -11,9 +11,29 @@
 
 **A production-grade, full-stack ride-hailing platform with premium UI/UX**
 
-[Live Demo](https://rider-app-frontend-one.vercel.app/) • [Features](#-key-features) • [Tech Stack](#-technology-stack) • [Quick Start](#-quick-start) • [Documentation](#-documentation)
-
 </div>
+
+---
+
+### Preview
+
+![RiderApp Screenshot](https://i.ibb.co/VckT8dp5/Screenshot-2025-12-30-213004.png)
+
+---
+
+### Live Demo
+
+Check out the app in action: [Live Demo](https://rider-app-frontend-one.vercel.app/)
+
+---
+
+### Repositories
+
+- **Frontend:** [GitHub Repo](https://github.com/rak9b/rider-app---frontend)  
+- **Backend:** [GitHub Repo](https://github.com/rak9b/rider-app---backend)  
+
+---
+
 
 ---
 
