@@ -39,9 +39,27 @@ export const Register = () => {
   const onSubmit = async (data: RegisterFormInputs) => {
     try {
       const result = await registerUser(data).unwrap();
-      dispatch(setCredentials(result));
-      toast.success("Account created successfully!");
-      navigate(`/dashboard/${result.user.role}`);
+      const mappedResult = {
+        user: {
+          id: result._id,
+          name: result.name,
+          email: result.email,
+          role: result.role,
+          status: result.status,
+          phone: result.phone,
+          avatar: result.avatar,
+          isOnline: result.isOnline,
+        },
+        token: result.token
+      };
+      dispatch(setCredentials(mappedResult));
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(mappedResult.user));
+      toast.success("Account created successfully!", {
+        icon: '🎉',
+        duration: 3000,
+      });
+      navigate(`/dashboard/${result.role}`);
     } catch (err: any) {
       toast.error(err.data?.message || 'Registration failed. Please try again.');
     }

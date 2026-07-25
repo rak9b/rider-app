@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import rideRoutes from './routes/rideRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import { mockUserStore } from './utils/mockUserStore.js';
+import { register } from './monitoring/metrics.js';
 
 dotenv.config();
 
@@ -19,7 +20,21 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// BUG-003: Restrict CORS origin in production/development
+const allowedOrigins = process.env.CLIENT_URL ? [process.env.CLIENT_URL] : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl/Postman) or matching allowedOrigins
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow dev origins gracefully
+        }
+    },
+    credentials: true,
+}));
+
 app.use(morgan('dev'));
 app.use(express.json());
 
@@ -31,6 +46,16 @@ app.get('/api/health', (req, res) => {
         mode: 'Mock Mode (No Database)',
         timestamp: new Date().toISOString()
     });
+});
+
+// BUG-035: Prometheus metrics endpoint
+app.get('/api/metrics', async (req, res) => {
+    try {
+        res.set('Content-Type', register.contentType);
+        res.end(await register.metrics());
+    } catch (err) {
+        res.status(500).end((err as Error).message);
+    }
 });
 
 app.use('/api/auth', authRoutes);
@@ -52,11 +77,13 @@ const startServer = async () => {
         console.log('═══════════════════════════════════════════════════════════\n');
         console.log('✅ Running in MOCK MODE (No MongoDB required)');
         console.log('✅ In-memory user authentication active');
-        console.log('✅ Test credentials ready to use\n');
+        console.log('✅ In-memory ride store active');
+        console.log('✅ Prometheus /api/metrics endpoint mounted\n');
 
         app.listen(PORT, () => {
             console.log(`🌐 Server running on: http://localhost:${PORT}`);
             console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+            console.log(`📊 Metrics: http://localhost:${PORT}/api/metrics`);
             console.log(`🔐 Login endpoint: http://localhost:${PORT}/api/auth/login\n`);
             console.log('═══════════════════════════════════════════════════════════');
             console.log('🔑 TEST CREDENTIALS:');

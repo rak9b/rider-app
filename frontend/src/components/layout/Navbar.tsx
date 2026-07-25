@@ -7,8 +7,6 @@ import { Button } from '../ui/Button';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { NotificationCenter } from '../features/common/NotificationCenter';
 import { CommandPalette } from '../features/common/CommandPalette';
-import { WeatherWidget } from '../features/common/WeatherWidget';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import { Menu, X, Zap, User, LogOut, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -60,8 +58,6 @@ export const Navbar = () => {
 
             {/* Right Side Actions */}
             <div className="hidden md:flex items-center space-x-3">
-              {isAuthenticated && <WeatherWidget />}
-              
               {/* Command Palette Trigger */}
               <button 
                 className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors"
@@ -71,7 +67,6 @@ export const Navbar = () => {
                 <Search size={20} />
               </button>
 
-              <LanguageSwitcher />
               <ThemeToggle />
               {isAuthenticated && <NotificationCenter />}
               

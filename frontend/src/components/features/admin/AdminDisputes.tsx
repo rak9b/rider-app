@@ -1,21 +1,53 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
+import React, { useState } from 'react';
+import { Card } from '../../ui/Card';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
-import { AlertTriangle, CheckCircle, MessageSquare, MoreHorizontal } from 'lucide-react';
-import { faker } from '@faker-js/faker';
+import { MessageSquare, MoreHorizontal } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const disputes = Array.from({ length: 5 }).map(() => ({
-  id: faker.string.uuid(),
-  user: faker.person.fullName(),
-  role: faker.helpers.arrayElement(['Rider', 'Driver']),
-  issue: faker.helpers.arrayElement(['Overcharged', 'Rude Behavior', 'Lost Item', 'Vehicle Issue']),
-  date: faker.date.recent().toLocaleDateString(),
-  status: faker.helpers.arrayElement(['open', 'resolved', 'investigating']),
-  severity: faker.helpers.arrayElement(['high', 'medium', 'low']),
-}));
+interface Dispute {
+  id: string;
+  user: string;
+  role: 'Rider' | 'Driver';
+  issue: string;
+  date: string;
+  status: 'open' | 'resolved' | 'investigating';
+  severity: 'high' | 'medium' | 'low';
+}
+
+const INITIAL_DISPUTES: Dispute[] = [
+  {
+    id: 'DISP-9001',
+    user: 'John Rider',
+    role: 'Rider',
+    issue: 'Overcharged for detour',
+    date: '2026-07-25',
+    status: 'open',
+    severity: 'high',
+  },
+  {
+    id: 'DISP-9002',
+    user: 'Mike Driver',
+    role: 'Driver',
+    issue: 'Unresponsive passenger at pickup',
+    date: '2026-07-24',
+    status: 'investigating',
+    severity: 'medium',
+  },
+  {
+    id: 'DISP-9003',
+    user: 'Sarah Rider',
+    role: 'Rider',
+    issue: 'Left personal item in vehicle',
+    date: '2026-07-23',
+    status: 'resolved',
+    severity: 'low',
+  },
+];
 
 export const AdminDisputes = () => {
+  const [disputes] = useState<Dispute[]>(INITIAL_DISPUTES);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -23,7 +55,7 @@ export const AdminDisputes = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dispute Resolution</h1>
           <p className="text-gray-500 dark:text-gray-400">Manage and resolve reported issues.</p>
         </div>
-        <Button variant="outline">Export Report</Button>
+        <Button variant="outline" onClick={() => toast.success('Exporting dispute report...')}>Export Report</Button>
       </div>
 
       <Card className="overflow-hidden">
@@ -42,7 +74,7 @@ export const AdminDisputes = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
               {disputes.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-gray-500">#{item.id.slice(0, 8)}</td>
+                  <td className="px-6 py-4 font-mono text-xs text-gray-500">#{item.id}</td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900 dark:text-white">{item.user}</div>
                     <div className="text-xs text-gray-500">{item.role}</div>
@@ -64,10 +96,10 @@ export const AdminDisputes = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => toast.info(`Opening chat for ${item.id}`)}>
                         <MessageSquare size={16} />
                       </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => toast.info(`Options for ${item.id}`)}>
                         <MoreHorizontal size={16} />
                       </Button>
                     </div>

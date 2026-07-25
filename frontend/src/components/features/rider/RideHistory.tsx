@@ -7,17 +7,22 @@ import { RideDetailsModal } from '../common/RideDetailsModal';
 
 // Mock Data Generation
 const generateHistory = (count: number) => {
-  return Array.from({ length: count }).map(() => ({
-    id: faker.string.uuid(),
-    date: faker.date.recent().toLocaleDateString(),
-    time: faker.date.recent().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    pickup: faker.location.streetAddress(),
-    destination: faker.location.streetAddress(),
-    driver: faker.person.fullName(),
-    driverImg: faker.image.avatar(),
-    fare: faker.finance.amount({ min: 10, max: 100, dec: 2 }),
-    status: faker.helpers.arrayElement(['completed', 'cancelled']),
-  }));
+  return Array.from({ length: count }).map(() => {
+    const recentDate = faker.date.recent();
+    return {
+      id: faker.string.uuid(),
+      date: recentDate.toLocaleDateString(),
+      day: recentDate.getDate().toString(),
+      month: recentDate.toLocaleString('en-US', { month: 'short' }),
+      time: recentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      pickup: faker.location.streetAddress(),
+      destination: faker.location.streetAddress(),
+      driver: faker.person.fullName(),
+      driverImg: faker.image.avatar(),
+      fare: faker.finance.amount({ min: 10, max: 100, dec: 2 }),
+      status: faker.helpers.arrayElement(['completed', 'cancelled']),
+    };
+  });
 };
 
 export const RideHistory = () => {
@@ -42,8 +47,8 @@ export const RideHistory = () => {
                 {/* Driver Avatar / Date Box */}
                 <div className="flex-shrink-0">
                   <div className="h-14 w-14 rounded-xl bg-gray-100 dark:bg-white/5 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                    <span className="text-xs font-bold uppercase">{ride.date.split('/')[1]}</span>
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">{ride.date.split('/')[0]}</span>
+                    <span className="text-xs font-bold uppercase">{ride.month}</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">{ride.day}</span>
                   </div>
                 </div>
 

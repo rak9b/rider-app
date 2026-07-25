@@ -1,25 +1,51 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { mockUserStore } from '../utils/mockUserStore.js';
 import generateToken from '../utils/generateToken.js';
+
+// Strict registration Zod schema
+const registerSchema = z.object({
+    name: z.string({ required_error: 'Name is required' }).min(2, 'Name must be at least 2 characters'),
+    email: z.string({ required_error: 'Email is required' }).email('Invalid email address'),
+    password: z.string({ required_error: 'Password is required' }).min(6, 'Password must be at least 6 characters'),
+    phone: z.string().optional(),
+});
+
+// Strict login Zod schema
+const loginSchema = z.object({
+    email: z.string({ required_error: 'Email is required' }).email('Invalid email address'),
+    password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
+});
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req: Request, res: Response) => {
-    const { name, email, password, role } = req.body;
+    // Validate request payload using Zod (BUG-002, BUG-042)
+    const validationResult = registerSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+        const errorMessages = validationResult.error.errors.map(err => err.message).join(', ');
+        res.status(400);
+        throw new Error(`Validation Error: ${errorMessages}`);
+    }
+
+    const { name, email, password, phone } = validationResult.data;
 
     const userExists = await mockUserStore.findOne({ email });
 
     if (userExists) {
         res.status(400);
-        throw new Error('User already exists');
+        throw new Error('User already exists with this email address');
     }
 
+    // STRICT ROLE STRIPPING (BUG-001): Force role to 'rider'. Public self-registration cannot create drivers or admins.
     const user = await mockUserStore.create({
         name,
         email,
         password,
-        role: role || 'rider',
+        phone,
+        role: 'rider', // Always force 'rider'
         status: 'active',
     });
 
@@ -30,6 +56,7 @@ export const registerUser = async (req: Request, res: Response) => {
             email: user.email,
             role: user.role,
             status: user.status,
+            phone: user.phone,
             token: generateToken(user._id),
         });
     } else {
@@ -42,12 +69,16 @@ export const registerUser = async (req: Request, res: Response) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const loginUser = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    // Validate login payload using Zod
+    const validationResult = loginSchema.safeParse(req.body);
 
-    if (!email || !password) {
+    if (!validationResult.success) {
+        const errorMessages = validationResult.error.errors.map(err => err.message).join(', ');
         res.status(400);
-        throw new Error('Please provide email and password');
+        throw new Error(`Validation Error: ${errorMessages}`);
     }
+
+    const { email, password } = validationResult.data;
 
     const user = await mockUserStore.findOne({ email });
 

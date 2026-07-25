@@ -80,7 +80,7 @@ export const FAQ = () => {
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <div className="px-8 pb-8 pl-20 text-slate-600 dark:text-slate-400 leading-relaxed font-inter border-t border-slate-50 dark:border-slate-800 pt-6">
+                    <div className="px-8 pb-8 pl-20 text-slate-700 dark:text-slate-200 leading-relaxed font-inter border-t border-slate-50 dark:border-slate-800 pt-6">
                       {faq.a}
                     </div>
                   </motion.div>

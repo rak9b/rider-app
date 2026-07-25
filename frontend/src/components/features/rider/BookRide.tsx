@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { startSearch } from '../../../store/slices/rideSlice';
-import { MapPin, Navigation, Banknote, CreditCard, Wallet, Clock, Tag, SlidersHorizontal, Package, Car, User, Phone } from 'lucide-react';
+import { MapPin, Navigation, Banknote, CreditCard, Wallet, Clock, Tag, SlidersHorizontal, Package, Car, User, Phone, Compass, ShieldCheck } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
@@ -55,7 +55,6 @@ export const BookRide = () => {
   const calculateFinalFare = () => {
     if (!estimateData) return '0.00';
     const baseFare = parseFloat(estimateData.fare);
-    // Packages might be slightly more expensive
     const multiplier = serviceType === 'package' ? 1.2 : 1.0;
     const final = (baseFare * multiplier) * (1 - discount);
     return final.toFixed(2);
@@ -271,18 +270,51 @@ export const BookRide = () => {
           </Card>
         </div>
 
-        {/* Map Placeholder */}
+        {/* Dynamic Vector Simulated Map (BUG-024 Fixed) */}
         <div className="lg:col-span-2">
-          <Card className="h-full min-h-[500px] relative overflow-hidden bg-gray-100 dark:bg-slate-800 border-0">
-             <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="text-center glass p-8 rounded-2xl">
-                   <MapPin className="h-12 w-12 text-primary-500 mx-auto mb-2" />
-                   <p className="text-gray-900 dark:text-white font-bold text-lg">Live Map Integration</p>
-                   <p className="text-sm text-gray-500">Google Maps / Mapbox API</p>
+          <Card className="h-full min-h-[550px] relative overflow-hidden bg-slate-900 border-0 shadow-2xl">
+             {/* Map Grid Vector Background */}
+             <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-20" />
+             
+             {/* Simulated Roads & Map Elements */}
+             <svg className="absolute inset-0 w-full h-full stroke-slate-700/50" strokeWidth="2" fill="none">
+               <line x1="10%" y1="20%" x2="90%" y2="80%" stroke="#3b82f6" strokeWidth="4" strokeDasharray="8 8" className="animate-pulse" />
+               <circle cx="20%" cy="30%" r="6" fill="#10b981" />
+               <circle cx="80%" cy="75%" r="6" fill="#ef4444" />
+               <path d="M 100 100 Q 250 50 400 200 T 600 400" stroke="#64748b" strokeWidth="3" />
+               <path d="M 200 450 Q 350 300 500 500 T 800 200" stroke="#475569" strokeWidth="2" />
+             </svg>
+
+             {/* Live Driver Indicators */}
+             <div className="absolute top-1/3 left-1/4 animate-bounce bg-primary-500 text-white p-2 rounded-full shadow-lg">
+                <Car size={16} />
+             </div>
+             <div className="absolute bottom-1/3 right-1/3 animate-pulse bg-violet-500 text-white p-2 rounded-full shadow-lg">
+                <Car size={16} />
+             </div>
+
+             {/* Overlay UI Card */}
+             <div className="absolute inset-0 flex flex-col justify-between p-6 pointer-events-none z-10">
+                <div className="flex justify-between items-start pointer-events-auto">
+                   <div className="bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-800 flex items-center gap-2 text-xs font-bold text-white shadow-xl">
+                      <Compass className="text-primary-400 animate-spin" size={16} />
+                      Live Radar Active • 5 Drivers Nearby
+                   </div>
+                   <div className="bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-800 flex items-center gap-2 text-xs font-bold text-emerald-400 shadow-xl">
+                      <ShieldCheck size={16} /> GPS Encrypted
+                   </div>
+                </div>
+
+                <div className="self-center bg-slate-900/90 backdrop-blur-md p-6 rounded-2xl border border-slate-800 text-center max-w-sm pointer-events-auto shadow-2xl">
+                   <MapPin className="h-10 w-10 text-primary-400 mx-auto mb-3 animate-bounce" />
+                   <h3 className="text-white font-bold text-lg mb-1">
+                      {pickup ? `From: ${pickup}` : 'Select Pickup & Destination'}
+                   </h3>
+                   <p className="text-xs text-slate-400">
+                      {destination ? `To: ${destination}` : 'Enter your drop-off location to generate a live route preview.'}
+                   </p>
                 </div>
              </div>
-             {/* Simulated Map Background */}
-             <div className="absolute inset-0 opacity-30 bg-[url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/-122.4241,37.78,14.25,0,60/600x600?access_token=pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJja2xsN3F3OG0wMDc4MnB0Y2d4b3F4b3F4In0.example')] bg-cover bg-center grayscale"></div>
           </Card>
         </div>
       </div>

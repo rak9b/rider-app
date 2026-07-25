@@ -38,7 +38,7 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
       <Navbar />
-      <div className="flex max-w-7xl mx-auto">
+      <div className="flex max-w-[1600px] w-full mx-auto px-2 sm:px-4 lg:px-6">
         <Sidebar />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden min-h-[calc(100vh-4rem)]">
           <Outlet />

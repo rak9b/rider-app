@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Modal } from '../../ui/Modal';
 import { Button } from '../../ui/Button';
-import { Input } from '../../ui/Input';
 import { CreditCard, Lock, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const paymentSchema = z.object({
+  cardNumber: z.string().min(16, 'Card number must be 16 digits').max(19, 'Invalid card number'),
+  expiry: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, 'Expiry format must be MM/YY'),
+  cvc: z.string().min(3, 'CVC must be 3-4 digits').max(4, 'Invalid CVC'),
+  name: z.string().min(2, 'Cardholder name is required'),
+});
+
+type PaymentFormData = z.infer<typeof paymentSchema>;
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -15,7 +26,22 @@ interface PaymentModalProps {
 export const PaymentModal = ({ isOpen, onClose, amount, onSuccess }: PaymentModalProps) => {
   const [step, setStep] = useState<'details' | 'processing' | 'success'>('details');
 
-  const handlePay = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<PaymentFormData>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      cardNumber: '',
+      expiry: '',
+      cvc: '',
+      name: '',
+    },
+  });
+
+  const onSubmit = (data: PaymentFormData) => {
     setStep('processing');
     setTimeout(() => {
       setStep('success');
@@ -23,6 +49,7 @@ export const PaymentModal = ({ isOpen, onClose, amount, onSuccess }: PaymentModa
         onSuccess();
         onClose();
         setStep('details');
+        reset();
       }, 2000);
     }, 2000);
   };
@@ -42,23 +69,62 @@ export const PaymentModal = ({ isOpen, onClose, amount, onSuccess }: PaymentModa
               <span className="text-2xl font-bold text-gray-900 dark:text-white">${amount}</span>
             </div>
 
-            <div className="space-y-4">
-              <Input label="Card Number" placeholder="0000 0000 0000 0000" icon={<CreditCard size={18} />} />
-              <div className="grid grid-cols-2 gap-4">
-                <Input label="Expiry Date" placeholder="MM/YY" />
-                <Input label="CVC" placeholder="123" type="password" />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Card Number</label>
+                <div className="relative">
+                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    {...register('cardNumber')}
+                    placeholder="4532 0000 0000 0000"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                </div>
+                {errors.cardNumber && <p className="text-xs text-red-500 mt-1">{errors.cardNumber.message}</p>}
               </div>
-              <Input label="Cardholder Name" placeholder="John Doe" />
-            </div>
 
-            <div className="flex items-center text-xs text-gray-500 gap-2 justify-center">
-              <Lock size={12} />
-              Payments secured by Stripe
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Expiry Date</label>
+                  <input
+                    {...register('expiry')}
+                    placeholder="12/28"
+                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  {errors.expiry && <p className="text-xs text-red-500 mt-1">{errors.expiry.message}</p>}
+                </div>
 
-            <Button onClick={handlePay} className="w-full h-12 text-lg bg-[#635BFF] hover:bg-[#534be0] text-white">
-              Pay ${amount}
-            </Button>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">CVC</label>
+                  <input
+                    type="password"
+                    {...register('cvc')}
+                    placeholder="123"
+                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  {errors.cvc && <p className="text-xs text-red-500 mt-1">{errors.cvc.message}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Cardholder Name</label>
+                <input
+                  {...register('name')}
+                  placeholder="John Doe"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+              </div>
+
+              <div className="flex items-center text-xs text-gray-500 gap-2 justify-center pt-2">
+                <Lock size={12} />
+                Payments secured by Stripe 256-bit encryption
+              </div>
+
+              <Button type="submit" className="w-full h-12 text-lg bg-[#635BFF] hover:bg-[#534be0] text-white">
+                Pay ${amount}
+              </Button>
+            </form>
           </motion.div>
         )}
 

@@ -9,7 +9,6 @@ import { motion } from 'framer-motion';
 import { RatingModal } from '../common/RatingModal';
 import { SplitFareModal } from './SplitFareModal';
 import { CancellationModal } from '../common/CancellationModal';
-import SOSButton from '../../ui/SOSButton';
 
 export const ActiveRideCard = () => {
   const dispatch = useDispatch();
@@ -181,10 +180,6 @@ export const ActiveRideCard = () => {
         onClose={() => setShowCancel(false)}
         onConfirm={() => dispatch(resetRide())}
       />
-
-      {['accepted', 'arriving', 'in-progress'].includes(status) && (
-        <SOSButton rideId="current-ride" />
-      )}
     </>
   );
 };

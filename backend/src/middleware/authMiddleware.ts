@@ -7,43 +7,39 @@ interface DecodedToken {
 }
 
 export const protect = async (req: any, res: Response, next: NextFunction) => {
-    let token;
+    const authHeader = req.headers.authorization;
 
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
-    ) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-
-            const decoded = jwt.verify(
-                token,
-                process.env.JWT_SECRET || 'secret'
-            ) as DecodedToken;
-
-            // Use mock user store instead of MongoDB
-            const user = await mockUserStore.findById(decoded.id);
-
-            if (!user) {
-                res.status(401);
-                throw new Error('Not authorized, user not found');
-            }
-
-            // Remove password from user object
-            const { password, ...userWithoutPassword } = user;
-            req.user = userWithoutPassword;
-
-            next();
-        } catch (error) {
-            console.error(error);
-            res.status(401);
-            throw new Error('Not authorized, token failed');
-        }
+    if (!authHeader || !authHeader.startsWith('Bearer')) {
+        res.status(401);
+        throw new Error('Not authorized, no token provided');
     }
 
-    if (!token) {
+    try {
+        const token = authHeader.split(' ')[1];
+        const secret = process.env.JWT_SECRET || 'rider_app_super_secure_jwt_secret_key_prod_2026';
+
+        const decoded = jwt.verify(
+            token,
+            secret
+        ) as DecodedToken;
+
+        // Use mock user store instead of MongoDB
+        const user = await mockUserStore.findById(decoded.id);
+
+        if (!user) {
+            res.status(401);
+            throw new Error('Not authorized, user not found');
+        }
+
+        // Remove password from user object
+        const { password, ...userWithoutPassword } = user;
+        req.user = userWithoutPassword;
+
+        next();
+    } catch (error) {
+        console.error('JWT Auth Error:', (error as Error).message);
         res.status(401);
-        throw new Error('Not authorized, no token');
+        throw new Error('Not authorized, token validation failed');
     }
 };
 
@@ -51,7 +47,7 @@ export const authorize = (...roles: string[]) => {
     return (req: any, res: Response, next: NextFunction) => {
         if (!req.user || !roles.includes(req.user.role)) {
             res.status(403);
-            throw new Error(`User role ${req.user?.role} is not authorized to access this route`);
+            throw new Error(`User role '${req.user?.role}' is not authorized to access this route`);
         }
         next();
     };

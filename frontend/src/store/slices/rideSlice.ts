@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { faker } from '@faker-js/faker';
 
 export type RideStatus = 'idle' | 'searching' | 'accepted' | 'arriving' | 'in-progress' | 'completed';
 
@@ -33,6 +32,16 @@ const initialState: RideState = {
   progress: 0,
 };
 
+const DEFAULT_DRIVER: Driver = {
+  id: '507f1f77bcf86cd799439012',
+  name: 'Mike Driver',
+  rating: 4.9,
+  vehicle: 'Toyota Camry 2022',
+  plate: 'ABC-1234',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+  phone: '+1 (555) 200-0002',
+};
+
 const rideSlice = createSlice({
   name: 'ride',
   initialState,
@@ -44,17 +53,9 @@ const rideSlice = createSlice({
       state.fare = action.payload.fare;
       state.progress = 0;
     },
-    driverFound: (state) => {
+    driverFound: (state, action: PayloadAction<Driver | undefined>) => {
       state.status = 'accepted';
-      state.driver = {
-        id: faker.string.uuid(),
-        name: faker.person.fullName(),
-        rating: 4.9,
-        vehicle: 'Tesla Model 3',
-        plate: 'VLX-2024',
-        avatar: faker.image.avatar(),
-        phone: faker.phone.number(),
-      };
+      state.driver = action.payload || DEFAULT_DRIVER;
       state.eta = 5;
       state.progress = 10;
     },

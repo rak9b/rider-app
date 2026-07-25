@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 
 const stories = [
-  { id: 1, title: '50% Off', img: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=200', viewed: false },
+  { id: 1, title: '50% Off', img: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=200', viewed: false },
   { id: 2, title: 'Safety', img: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=200', viewed: false },
   { id: 3, title: 'New Cities', img: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=80&w=200', viewed: true },
   { id: 4, title: 'Premium', img: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=200', viewed: true },

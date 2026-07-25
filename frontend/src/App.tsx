@@ -9,10 +9,11 @@ import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
 // Layouts
 import { Navbar } from './components/layout/Navbar';
-import { AIChatbot } from './components/ui/AIChatbot';
+import { AIChatbot } from './components/features/common/AIChatbot';
 import { Footer } from './components/layout/Footer';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DynamicBackground } from './components/layout/DynamicBackground';
+import { RequireRole } from './components/auth/RequireRole';
 
 // Pages - Lazy Loaded
 const Home = React.lazy(() => import('./pages/public/Home').then(module => ({ default: module.Home })));
@@ -84,27 +85,33 @@ function App() {
 
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard" element={<DashboardLayout />}>
-                {/* Rider Routes */}
-                <Route path="rider" element={<RiderDashboard />} />
-                <Route path="rider/history" element={<RideHistory />} />
-                <Route path="rider/profile" element={<ProfileSettings />} />
+                {/* Rider Protected Routes */}
+                <Route element={<RequireRole allowedRoles={['rider']} />}>
+                  <Route path="rider" element={<RiderDashboard />} />
+                  <Route path="rider/history" element={<RideHistory />} />
+                  <Route path="rider/profile" element={<ProfileSettings />} />
+                </Route>
 
-                {/* Driver Routes */}
-                <Route path="driver" element={<DriverDashboard />} />
-                <Route path="driver/requests" element={<DriverDashboard />} />
-                <Route path="driver/earnings" element={<DriverEarnings />} />
-                <Route path="driver/documents" element={<DocumentUpload />} />
-                <Route path="driver/history" element={<RideHistory />} />
-                <Route path="driver/reviews" element={<DriverReviews />} />
-                <Route path="driver/profile" element={<ProfileSettings />} />
+                {/* Driver Protected Routes (BUG-005) */}
+                <Route element={<RequireRole allowedRoles={['driver']} />}>
+                  <Route path="driver" element={<DriverDashboard />} />
+                  <Route path="driver/requests" element={<DriverDashboard />} />
+                  <Route path="driver/earnings" element={<DriverEarnings />} />
+                  <Route path="driver/documents" element={<DocumentUpload />} />
+                  <Route path="driver/history" element={<RideHistory />} />
+                  <Route path="driver/reviews" element={<DriverReviews />} />
+                  <Route path="driver/profile" element={<ProfileSettings />} />
+                </Route>
 
-                {/* Admin Routes */}
-                <Route path="admin" element={<AdminDashboard />} />
-                <Route path="admin/users" element={<AdminUsers />} />
-                <Route path="admin/rides" element={<AdminRides />} />
-                <Route path="admin/disputes" element={<AdminDisputes />} />
-                <Route path="admin/analytics" element={<AdminAnalytics />} />
-                <Route path="admin/settings" element={<ProfileSettings />} />
+                {/* Admin Protected Routes (BUG-030) */}
+                <Route element={<RequireRole allowedRoles={['admin']} />}>
+                  <Route path="admin" element={<AdminDashboard />} />
+                  <Route path="admin/users" element={<AdminUsers />} />
+                  <Route path="admin/rides" element={<AdminRides />} />
+                  <Route path="admin/disputes" element={<AdminDisputes />} />
+                  <Route path="admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="admin/settings" element={<ProfileSettings />} />
+                </Route>
               </Route>
 
               {/* Fallback */}

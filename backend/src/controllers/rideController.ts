@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import Ride from '../models/Ride.js';
-import User from '../models/User.js';
+import { mockRideStore } from '../utils/mockRideStore.js';
 
 // @desc    Get ride estimate
 // @route   POST /api/rides/estimate
 // @access  Private (Rider)
 export const getRideEstimate = async (req: Request, res: Response) => {
-    const { pickup, destination, vehicleType } = req.body;
+    const { vehicleType } = req.body;
 
     // Mock fare calculation logic
     const baseFare = vehicleType === 'premium' ? 10 : vehicleType === 'car' ? 5 : 2;
@@ -27,16 +26,21 @@ export const getRideEstimate = async (req: Request, res: Response) => {
 export const requestRide = async (req: any, res: Response) => {
     const { pickupLocation, destinationLocation, fare, distance, duration, paymentMethod } = req.body;
 
-    const ride = await Ride.create({
+    if (!pickupLocation || !destinationLocation) {
+        res.status(400);
+        throw new Error('Pickup and destination locations are required');
+    }
+
+    const ride = await mockRideStore.create({
         rider: req.user._id,
-        pickupLocation,
-        destinationLocation,
-        fare,
-        distance,
-        duration,
-        paymentMethod,
+        pickupLocation: typeof pickupLocation === 'string' ? { address: pickupLocation } : pickupLocation,
+        destinationLocation: typeof destinationLocation === 'string' ? { address: destinationLocation } : destinationLocation,
+        fare: typeof fare === 'string' ? parseFloat(fare) : (fare || 15.0),
+        distance: distance || '5.0 km',
+        duration: duration || '15 mins',
+        paymentMethod: paymentMethod || 'cash',
         status: 'REQUESTED',
-        timeline: [{ status: 'REQUESTED' }]
+        timeline: [{ status: 'REQUESTED', timestamp: new Date() }]
     });
 
     res.status(201).json(ride);
@@ -46,32 +50,31 @@ export const requestRide = async (req: any, res: Response) => {
 // @route   GET /api/rides
 // @access  Private
 export const getRides = async (req: any, res: Response) => {
-    let query: any = {};
+    const query: any = {};
 
     if (req.user.role === 'rider') {
         query.rider = req.user._id;
     } else if (req.user.role === 'driver') {
         query.driver = req.user._id;
     }
+    if (req.query.status) {
+        query.status = req.query.status;
+    }
     // Admin sees all
 
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+
+    const allMatchingRides = await mockRideStore.find(query);
+    const total = allMatchingRides.length;
+
     const skip = (page - 1) * limit;
-
-    const items = await Ride.find(query)
-        .populate('rider', 'name email phone')
-        .populate('driver', 'name email phone vehicleDetails')
-        .sort('-createdAt')
-        .skip(skip)
-        .limit(limit);
-
-    const total = await Ride.countDocuments(query);
+    const items = allMatchingRides.slice(skip, skip + limit);
 
     res.json({
         items,
         page,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / limit) || 1,
         total
     });
 };
@@ -80,7 +83,7 @@ export const getRides = async (req: any, res: Response) => {
 // @route   PUT /api/rides/:id/accept
 // @access  Private (Driver)
 export const acceptRide = async (req: any, res: Response) => {
-    const ride = await Ride.findById(req.params.id);
+    const ride = await mockRideStore.findById(req.params.id);
 
     if (!ride) {
         res.status(404);
@@ -92,13 +95,13 @@ export const acceptRide = async (req: any, res: Response) => {
         throw new Error('Ride is no longer available');
     }
 
-    ride.driver = req.user._id;
-    ride.status = 'ACCEPTED';
-    ride.timeline.push({ status: 'ACCEPTED' });
+    const updatedRide = await mockRideStore.updateOne(req.params.id, {
+        driver: req.user._id,
+        status: 'ACCEPTED',
+        timeline: [...ride.timeline, { status: 'ACCEPTED', timestamp: new Date() }]
+    });
 
-    await ride.save();
-
-    res.json(ride);
+    res.json(updatedRide);
 };
 
 // @desc    Update ride status
@@ -106,7 +109,7 @@ export const acceptRide = async (req: any, res: Response) => {
 // @access  Private (Driver)
 export const updateRideStatus = async (req: any, res: Response) => {
     const { status } = req.body;
-    const ride = await Ride.findById(req.params.id);
+    const ride = await mockRideStore.findById(req.params.id);
 
     if (!ride) {
         res.status(404);
@@ -114,15 +117,16 @@ export const updateRideStatus = async (req: any, res: Response) => {
     }
 
     // Verify it's the correct driver
-    if (ride.driver?.toString() !== req.user._id.toString()) {
+    const driverId = typeof ride.driver === 'object' ? ride.driver._id : ride.driver;
+    if (driverId?.toString() !== req.user._id.toString()) {
         res.status(403);
         throw new Error('Not authorized to update this ride');
     }
 
-    ride.status = status;
-    ride.timeline.push({ status });
+    const updatedRide = await mockRideStore.updateOne(req.params.id, {
+        status,
+        timeline: [...ride.timeline, { status, timestamp: new Date() }]
+    });
 
-    await ride.save();
-
-    res.json(ride);
+    res.json(updatedRide);
 };
